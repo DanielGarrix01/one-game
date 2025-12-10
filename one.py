@@ -19,7 +19,6 @@ def main():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
-        screen.fill((0, 0, 0))
         pygame.display.flip()
     pygame.quit()
 
