@@ -1,11 +1,6 @@
 import pygame
 import os
 
-pygame.init()
-WIDTH, HEIGHT = 1920, 1080
-screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.NOFRAME)
-pygame.display.set_caption("ONE - Main Menu")
-
 # ---------------------------------------------------------
 # Función para cargar imágenes desde hud y escalarlas
 # ---------------------------------------------------------
@@ -21,26 +16,33 @@ def load_hud(name, scale=0.6):
     return img
 
 # ---------------------------------------------------------
-# Diccionario con TODOS los botones, incluyendo EXIT
+# Cache de botones (lazy-load)
 # ---------------------------------------------------------
-buttons = {
-    "play": {
-        "normal": load_hud("en_play.png"),
-        "hover": load_hud("en_play_select.png")
-    },
-    "options": {
-        "normal": load_hud("en_options.png"),
-        "hover": load_hud("en_options_select.png")
-    },
-    "credits": {
-        "normal": load_hud("en_credits.png"),
-        "hover": load_hud("en_credits_select.png")
-    },
-    "exit": {
-        "normal": load_hud("en_exit.png"),
-        "hover": load_hud("en_exit_select.png")
-    }
-}
+buttons = None
+
+def init_buttons():
+    """Inicializa los botones después de que pygame.display esté listo"""
+    global buttons
+    if buttons is None:
+        buttons = {
+            "play": {
+                "normal": load_hud("en_play.png"),
+                "hover": load_hud("en_play_select.png")
+            },
+            "options": {
+                "normal": load_hud("en_options.png"),
+                "hover": load_hud("en_options_select.png")
+            },
+            "credits": {
+                "normal": load_hud("en_credits.png"),
+                "hover": load_hud("en_credits_select.png")
+            },
+            "exit": {
+                "normal": load_hud("en_exit.png"),
+                "hover": load_hud("en_exit_select.png")
+            }
+        }
+    return buttons
 
 # Orden vertical de los botones
 button_order = ["play", "options", "credits", "exit"]
@@ -48,15 +50,16 @@ button_order = ["play", "options", "credits", "exit"]
 # ---------------------------------------------------------
 # Dibuja los botones y devuelve sus rects
 # ---------------------------------------------------------
-def draw_menu_buttons(screen):
+def draw_menu_buttons(screen, width=1920, height=1080):
+    btns = init_buttons()  # Inicializar botones en primer uso
     mouse_x, mouse_y = pygame.mouse.get_pos()
 
     # Tomamos tamaño del primer botón
-    btn_w, btn_h = buttons["play"]["normal"].get_size()
+    btn_w, btn_h = btns["play"]["normal"].get_size()
     spacing = 20
 
     total_height = len(button_order) * (btn_h + spacing) - spacing
-    start_y = (HEIGHT - total_height) // 2
+    start_y = (height - total_height) // 2
 
     rects = {}
 
@@ -69,9 +72,9 @@ def draw_menu_buttons(screen):
 
         # Hover
         if rect.collidepoint(mouse_x, mouse_y):
-            img = buttons[name]["hover"]
+            img = btns[name]["hover"]
         else:
-            img = buttons[name]["normal"]
+            img = btns[name]["normal"]
 
         screen.blit(img, (x, y))
 
@@ -80,11 +83,11 @@ def draw_menu_buttons(screen):
 # ---------------------------------------------------------
 # Menú principal
 # ---------------------------------------------------------
-def main_menu():
+def main_menu(screen, width=1920, height=1080):
     running = True
 
     while running:
-        rects = draw_menu_buttons(screen)
+        rects = draw_menu_buttons(screen, width, height)
 
         for event in pygame.event.get():
 
@@ -111,17 +114,9 @@ def main_menu():
 
                 # ✔ Aquí si cierra
                 if rects["exit"].collidepoint(mx, my):
-                    pygame.quit()
-                    quit()
+                    running = False
+                # nota: el menu esta muy inprovisado, solo para pruebas
 
         screen.fill((0, 0, 0))
-        draw_menu_buttons(screen)
+        draw_menu_buttons(screen, width, height)
         pygame.display.flip()
-
-    pygame.quit()
-
-# ---------------------------------------------------------
-# Ejecutar menú
-# ---------------------------------------------------------
-if __name__ == "__main__":
-    main_menu()
